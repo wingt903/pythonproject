@@ -1,0 +1,390 @@
+Important classes of Spark SQL and DataFrames
+pyspark.sql.SparkSession :Main entry point for Dataframe SparkSQL functionality
+pyspark.sql.DataFrame :A distributed collection of data grouped into named columns
+pyspark.sql.Column : A column expression in a DataFrame.
+pyspark.sql.Row : A row of data in a DataFrame.
+pyspark.sql.GroupedData :Aggregation methods, returned by DataFrame.groupBy().
+pyspark.sql.DataFrameNaFunctions : Methods for handling missing data (null values).
+pyspark.sql.DataFrameStatFunctions : Methods for statistics functionality.
+pyspark.sql.functions : List of built-in functions available for DataFrame.
+pyspark.sql.types : List of data types available.
+pyspark.sql.Window : For working with window functions.
+
+To create a basic SparkSession, just use SparkSession.builder:
+
+from pyspark.sql import SparkSession
+spark = SparkSession \
+    .builder \
+    .appName("Data Frame Example") \
+    .config("spark.some.config.option", "some-value") \
+    .getOrCreate()
+
+Import the sql module from pyspark
+
+
+from pyspark.sql import *
+Student = Row("firstName", "lastName", "age", "telephone")
+s1 = Student('David', 'Julian', 22, 100000)
+s2 = Student('Mark', 'Webb', 23, 658545)
+StudentData=[s1,s2]
+df=spark.createDataFrame(StudentData)
+df.show()
+===============lab1=============
+1. import the sparksession package
+2. create a sparksession object
+3. create a dataframe using sparksession object and display the dataframe
+4. create a simple passenger instance with 4 fields, name, age, source and destination
+5. create 2 passenger fields with following values
+David, 22, London, Paris
+Steve, 22, New York, Sydney
+6. Display the Dataframe to check the data
+
+# Step 1: Import the SparkSession package
+from pyspark.sql import SparkSession
+
+# Step 2: Create a SparkSession object
+spark = SparkSession.builder \
+    .appName("PassengerDataFrame") \
+    .getOrCreate()
+
+# Step 3: Create a DataFrame using SparkSession object and display the DataFrame
+# Creating a DataFrame with an empty list
+df = spark.createDataFrame([], schema="name STRING, age INT, source STRING, destination STRING")
+df.show()
+
+# Step 4: Create a simple passenger instance with 4 fields: name, age, source, and destination
+passenger_data = [("David", 22, "London", "Paris"), ("Steve", 22, "New York", "Sydney")]
+
+# Step 5: Create 2 passenger fields with the given values
+passenger_df = spark.createDataFrame(passenger_data, schema=["name", "age", "source", "destination"])
+
+# Step 6: Display the DataFrame to check the data
+passenger_df.show()
+
+# Step 7: Write DataFrame to a Parquet file
+passenger_df.write.parquet("passenger_data.parquet")
+
+# Step 8: Read DataFrame from Parquet file
+parquet_df = spark.read.parquet("passenger_data.parquet")
+
+# Step 9: Display the DataFrame read from Parquet file
+parquet_df.show()
+=============================
+
+In most of the cases, the default data source will be used for all operations.
+
+df = spark.read.load("file path")
+
+# Spark load the data source from the defined file path
+
+df.select("column name", "column name").write.save("file name")
+
+# The DataFrame is saved in the defined format
+
+# By default it is saved in the Spark Warehouse 
+
+A json file can be loaded:
+
+df = spark.read.load("path of json file", format="json")
+
+Reading A Parquet File
+Here we are loading a json file into a dataframe.
+
+df = spark.read.json("path of the file")
+For saving the dataframe into parquet format.
+
+df.write.parquet("parquet file name")
+
+Verifying The Result
+We can verify the result by loading in Parquet format.
+
+pf = spark.read.parquet("parquet file name")
+Here we are reading in Parquet format.
+
+To view the the DataFrame use show() method.
+
+CSV Loading
+To load a csv data set user has to make use of spark.read.csv method to load it into a DataFrame.
+
+Here we are loading a football player dataset using the spark csvreader.
+
+df = spark.read.csv("path-of-file/fifa_players.csv", inferSchema = True, header = True)
+
+How To Check The Schema
+To check the schema of the loaded csv data.
+
+df.printSchema()
+Once executed we will get the following result.
+
+root
+ |-- ID: integer (nullable = true)
+ |-- Name: string (nullable = true)
+ |-- Age: integer (nullable = true)
+ |-- Nationality: string (nullable = true
+ |-- Overall: integer (nullable = true)
+ |-- Potential: integer (nullable = true)
+ |-- Club: string (nullable = true)
+ |-- Value: string (nullable = true)
+ |-- Wage: string (nullable = true)
+ |-- Special: integer (nullable = true)
+
+Column Names and Count (Rows and Column)
+For finding the column names, count of the number of rows and columns we can use the following methods.
+
+For Column names
+
+df.columns
+['ID', 'Name', 'Age', 'Nationality', 'Overall', 'Potential', 'Club', 'Value', 'Wage', 'Special']
+Row count
+
+df.count()
+17981
+Column count
+
+len(df.columns)
+10
+
+To get the summary of any particular column make use of describe method.
+
+This method gives us the statistical summary of the given column, if not specified, it provides the statistical summary of the DataFrame.
+
+df.describe('Name').show()
+The result we will be as shown below.
+
++-------+-------------+
+|summary|         Name|
++-------+-------------+
+|  count|        17981|
+|   mean|         null|
+| stddev|         null|
+|    min|     A. Abbas|
+|    max|Óscar Whalley|
++-------+-------------+
+
+Describing A Different Column
+Now try it on some other column.
+
+df.describe('Age').show()
+
+Observe the various Statistical Parameters.
+
++-------+------------------+
+|summary|               Age|
++-------+------------------+
+|  count|             17981|
+|   mean|25.144541460430453|
+| stddev| 4.614272345005111|
+|    min|                16|
+|    max|                47|
++-------+------------------+
+
+Selecting Multiple Columns
+For selecting particular columns from the DataFrame, one can use the select method.
+
+Syntax for performing selection operation is:
+
+df.select('Column name 1,'Column name 2',......,'Column name n').show()
+**show() is optional **
+
+One can load the result into another DataFrame by simply equating.
+
+ie
+
+dfnew=df.select('Column name 1,'Column name 2',......,'Column name n')
+
+
+Selection Operation
+Selecting the column ID and Name and loading the result to a new DataFrame.
+
+dfnew=df.select('ID','Name')
+Verifying the result
+
+dfnew.show(5)
++------+-----------------+
+|    ID|             Name|
++------+-----------------+
+| 20801|Cristiano Ronaldo|
+|158023|         L. Messi|
+|190871|           Neymar|
+|176580|        L. Suárez|
+|167495|         M. Neuer|
++------+-----------------+
+
+
+Filtering Data
+For filtering the data filter command is used.
+
+df.filter(df.Club=='FC Barcelona').show(3)
+The result will be as follows:
+
++------+----------+---+-----------+-------+---------+------------+------+-----+-------+
+|    ID|      Name|Age|Nationality|Overall|Potential|        Club| Value| Wage|Special|
++------+----------+---+-----------+-------+---------+------------+------+-----+-------+
+|158023|  L. Messi| 30|  Argentina|     93|       93|FC Barcelona| €105M|€565K|   2154|
+|176580| L. Suárez| 30|    Uruguay|     92|       92|FC Barcelona|  €97M|€510K|   2291|
+|168651|I. Rakitić| 29|    Croatia|     87|       87|FC Barcelona|€48.5M|€275K|   2129|
++------+----------+---+-----------+-------+---------+------------+------+-----+-------+
+
+Sorting Data (OrderBy)
+To sort the data use the OrderBy method.
+
+In pyspark in default, it will sort in ascending order but we can change it into descending order as well.
+
+df.filter((df.Club=='FC Barcelona') & (df.Nationality=='Spain')).orderBy('ID',).show(5)
+To sort in descending order:
+
+df.filter((df.Club=='FC Barcelona') & (df.Nationality=='Spain')).orderBy('ID',ascending=False).show(5)
+
+
+Random Data Generation
+Random Data generation is useful when we want to test algorithms and to implement new ones.
+
+In Spark under sql.functions we have methods to generate random data. e.g., uniform (rand), and standard normal (randn).
+
+from pyspark.sql.functions import rand,randn
+df = spark.range(0,7)
+df1 = df.select("id").orderBy(rand()).limit(4)
+df1.show()
+The output will be as follows
+
++---+
+| id|
++---+
+| 0|
+| 3|
+| 6|
+| 1|
++---+
+
+=================lab2============
+1. import the sparksession package
+2. create a sparksession object
+3. read the json file, and create a dataframe with the json data. display the dataframe. save the dataframe to a parquet file with name employees
+4. from the dataframe, display the associates who are mapped to 'JAVA' stream. save the resultant dataframe to a parquet file with name JavaEmployees
+
+
+# Step 1: Import the SparkSession package
+from pyspark.sql import SparkSession
+
+# Step 2: Create a SparkSession object
+spark = SparkSession.builder \
+    .appName("EmployeeData") \
+    .getOrCreate()
+
+# Step 3: Read the JSON file and create a DataFrame with the JSON data
+# Replace 'path/to/employees.json' with the actual path to your JSON file
+json_file_path = 'path/to/employees.json'
+employees_df = spark.read.json(json_file_path)
+
+# Display the DataFrame
+print("Employees DataFrame:")
+employees_df.show()
+
+# Save the DataFrame to a Parquet file with the name 'Employees'
+employees_df.write.parquet('Employees')
+
+# Step 4: From the DataFrame, display the associates' names who are mapped to the 'JAVA' stream
+java_employees_df = employees_df.filter(employees_df.stream == 'JAVA').select("name")
+
+# Display the resultant DataFrame
+print("Java Employees DataFrame:")
+java_employees_df.show()
+
+# Save the resultant DataFrame to a Parquet file with the name 'JavaEmployees'
+java_employees_df.write.parquet('JavaEmployees')
+
+=============Lab3==========
+1. import the pyspark and sparksession
+2. create a sparksession object
+3. create 10 random values as a column and name the column as rand1
+4. create another 10 random values as column and name the column as rand2
+5. calculate the co-variance and correlation between these two columns
+6. create a new dataframe with header names as 'Stats' and 'Value'
+7. fill the new Dataframe with the obtained values as 'Co-variance' and 'Correlation'
+8. save the resultant dataframe to a CSV file with name Result
+
+# Step 1: Import necessary packages
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import rand
+
+# Step 2: Create a SparkSession object
+spark = SparkSession.builder \
+    .appName("CorrelationExample") \
+    .getOrCreate()
+
+# Step 3: Create 10 random values as a column and name the column as rand1
+df = spark.range(10).withColumn("rand1", rand())
+
+# Step 4: Create another 10 random values as a column and name the column as rand2
+df = df.withColumn("rand2", rand())
+
+# Step 5: Calculate the co-variance and correlation between these two columns
+covariance_value = df.stat.cov("rand1", "rand2")
+correlation_value = df.stat.corr("rand1", "rand2")
+
+# Step 6: Create a new DataFrame with header names as 'Stats' and 'Value'
+stats_df = spark.createDataFrame([
+    ("Co-variance", covariance_value),
+    ("Correlation", correlation_value)
+], ["Stats", "Value"])
+
+# Step 7: Display the new DataFrame
+stats_df.show()
+
+# Step 8: Save the resultant DataFrame to a CSV file with the name Result
+stats_df.write.csv("Result", header=True)
+
+
+===========Lab4=============
+
+1. import the sparksession package
+2. create a sparksession object
+3. create a dataframe with the following details under the headers as 'ID', 'Name', 'Age', 'Area of Interest'
+4. fill the dataframe with the following data:
+'1','Jack','22','Data Science'
+'2','Luke','21','Data Analytics'
+'3','Leo','24','Micro Services'
+'4','Mark','21','Data Analytics'
+5. use describe method on Age column and observe the statistical parameters and save the data into a parquet file under the folder with name 'Age' 
+6. select the columns ID, Name, Age and Name should be in descending order.  Save the resultant into a parquet file under the folder with name 'NameSorted'
+
+# Step 1: Import the SparkSession package
+from pyspark.sql import SparkSession
+
+# Step 2: Create a SparkSession object
+spark = SparkSession.builder \
+    .appName("StudentData") \
+    .getOrCreate()
+
+# Step 3: Create a DataFrame with the specified details
+data = [
+    ('1', 'Jack', '22', 'Data Science'),
+    ('2', 'Luke', '21', 'Data Analytics'),
+    ('3', 'Leo', '24', 'Micro Services'),
+    ('4', 'Mark', '21', 'Data Analytics')
+]
+
+columns = ['ID', 'Name', 'Age', 'Area of Interest']
+
+df = spark.createDataFrame(data, schema=columns)
+
+# Display the DataFrame
+df.show()
+
+# Step 5: Use describe method on the Age column and observe the statistical parameters
+age_stats = df.describe('Age')
+
+# Display the statistical parameters
+age_stats.show()
+
+# Save the statistical parameters into a Parquet file under the folder with the name 'Age'
+age_stats.write.parquet('Age')
+
+# Step 6: Select the columns ID, Name, Age and sort by Name in descending order
+sorted_df = df.select('ID', 'Name', 'Age').orderBy('Name', ascending=False)
+
+# Display the sorted DataFrame
+sorted_df.show()
+
+# Save the resultant DataFrame into a Parquet file under the folder with the name 'NameSorted'
+sorted_df.write.parquet('NameSorted')
